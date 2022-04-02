@@ -12,31 +12,57 @@ class Ruz:
         fio = " ".join(map(lambda s: s.strip().title(), [last_name, first_name, patronymic]))
         return cls.get_schedule_by_full_name(fio)
 
-    def check_mail(mail, FIO): # не доработана!!!
-        schedule = ruz.person_lessons("mymail@edu.hse.ru")
-        print(schedule)
+    def find_people(self, surname):
+        r = requests.get('https://ruz.hse.ru/api/search?term='+surname).json()
+        for i in r:
+            print(i)
+            i['mail'] = self.check_mail(i['label'], i['type'])
+        return r
+
+    def get_schedule_with_mail(self, mail):
+        schedule = ruz.person_lessons(email=mail)
         fields = ['auditorium', 'auditoriumAmount', 'beginLesson', 'building', 'dayOfWeekString', 'discipline',
                   'endLesson', 'group', 'lecturer', 'url1']
         for i in schedule:
             for key, value in list(i.items()):
                 if key not in fields:
                     del i[key]
-        print(schedule)
-        return True
+        return schedule
 
+    def check_mail(self, FIO, type_):
+        f = FIO.split(' ')
+        mail = self.get_mail(f[0], f[1], f[2], type_)
+        schedule_1 = self.get_schedule_with_mail(mail)
+        if len(schedule_1)==0:
+            schedule_1 = None
+        schedule_2 = self.get_schedule_by_full_name(FIO)
+        print('correct', schedule_2)
+        k = 1
+        while schedule_2 != schedule_1:
+            mail_ = mail.split('@')
+            mail = mail_[0]+'_' + str(k) + '@' + mail_[1]
+            s = '_' + str(k)
+            k = k + 1
+            schedule_1 = self.get_schedule_with_mail(mail)
+            if len(schedule_1) == 0:
+                schedule_1 = None
+            mail = mail.replace(s, '')
+        return mail
+
+    @staticmethod
     def get_mail(f: str, i: str, o: str, type_: str):
         ch = {'Й': 'y', 'Ц': 'ts', 'У': 'u', 'К': 'k', 'Е': 'e', 'Н': 'n', 'Г': 'g', 'Ш': 'sh', 'Щ': 'sch', 'З': 'z',
               'Х': 'h', 'Ф': 'f', 'Ы': 'y', 'В': 'v', 'А': 'a', 'П': 'p', 'Р': 'r', 'О': 'o', 'Л': 'l', 'Д': 'd',
-              'ь': '', 'ъ': '', 'Ж': 'zh', 'Э': 'e', 'Я': 'ya', 'Ч': 'ch', 'С': 's', 'М': 'm', 'И': 'i', 'Т': 't', 'Б': 'b'}
+              'Ь': '', 'ъ': '', 'Ж': 'zh', 'Э': 'e', 'Я': 'ya', 'Ч': 'ch', 'С': 's', 'М': 'm', 'И': 'i', 'Т': 't', 'Б': 'b'}
         mail = ''
         mail = mail + ch[i[0]]
         mail = mail + ch[o[0]]
         for i in f:
             mail = mail + ch[i.upper()]
         if type_ == 'student':
-            mail = mail + '.edu.hse.ru'
+            mail = mail + '@edu.hse.ru'
         else:
-            mail = mail + '.hse.ru'
+            mail = mail + '@hse.ru'
         return mail
 
     @staticmethod
@@ -130,8 +156,7 @@ class Ruz:
         else:
             logg.error('The empty answer from ruz!')
             return None
-#ruz = Ruz.get_schedule_by_name_and_date('Кофанова Мария Александровна', '2022.01.10')
-#print(ruz)
+
 
 
 
