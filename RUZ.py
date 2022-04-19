@@ -7,10 +7,9 @@ logg = logging.getLogger("RuzLogger.WorkLogger")
 logg.debug("Initialize Ruz")
 
 class Ruz:
-    @classmethod
-    def get_schedule_by_names(cls, last_name, first_name, patronymic: str, self) -> Optional[dict]:
+    def get_schedule_by_names(self, last_name, first_name, patronymic: str) -> Optional[dict]:
         fio = " ".join(map(lambda s: s.strip().title(), [last_name, first_name, patronymic]))
-        return cls.get_schedule_by_full_name(fio)
+        return self.get_schedule_by_full_name(fio)
 
     def find_people(self, surname):
         r = requests.get('https://ruz.hse.ru/api/search?term='+surname).json()
@@ -36,13 +35,14 @@ class Ruz:
         if len(schedule_1)==0:
             schedule_1 = None
         schedule_2 = self.get_schedule_by_full_name(FIO)
-        print('correct', schedule_2)
+        schedule_2 = schedule_2[:len(schedule_1)]
         k = 1
         while schedule_2 != schedule_1:
             mail_ = mail.split('@')
             mail = mail_[0]+'_' + str(k) + '@' + mail_[1]
             s = '_' + str(k)
             k = k + 1
+            print(mail)
             schedule_1 = self.get_schedule_with_mail(mail)
             if len(schedule_1) == 0:
                 schedule_1 = None
@@ -156,9 +156,3 @@ class Ruz:
         else:
             logg.error('The empty answer from ruz!')
             return None
-
-
-
-
-
-
