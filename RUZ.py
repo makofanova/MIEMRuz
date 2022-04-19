@@ -32,10 +32,11 @@ class Ruz:
         f = FIO.split(' ')
         mail = self.get_mail(f[0], f[1], f[2], type_)
         schedule_1 = self.get_schedule_with_mail(mail)
+        schedule_2 = self.get_schedule_by_full_name(FIO)
         if len(schedule_1)==0:
             schedule_1 = None
-        schedule_2 = self.get_schedule_by_full_name(FIO)
-        schedule_2 = schedule_2[:len(schedule_1)]
+        else:
+            schedule_2 = schedule_2[:len(schedule_1)]
         k = 1
         while schedule_2 != schedule_1:
             mail_ = mail.split('@')
